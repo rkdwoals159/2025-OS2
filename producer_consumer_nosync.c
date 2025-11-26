@@ -126,9 +126,6 @@ int main(void) {
     printf("버퍼 크기(Buffer size)=%d, 생산자(Producer)=%d, 소비자(Consumer)=%d, "
            "각 Producer 주문 수(Orders per producer)=%d\n",
            BUFFER_SIZE, NUM_PRODUCERS, NUM_CONSUMERS, ORDERS_PER_PRODUCER);
-    printf("※ 이 버전은 '동기화 기능이 전혀 없는' 실험용 코드입니다.\n");
-    printf("   - WARNING 메시지: 버퍼 상태를 잘못 판단하는 등 '이상 징후'를 의미\n");
-    printf("   - *** ERROR 메시지: count 값이 음수/버퍼 크기 초과가 된 심각한 race condition 을 의미\n\n");
 
     // 스레드 생성
     for (int i = 0; i < NUM_PRODUCERS; i++) {

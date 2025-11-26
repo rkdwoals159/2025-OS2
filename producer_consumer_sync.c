@@ -133,11 +133,6 @@ int main(void) {
     printf("버퍼 크기(Buffer size)=%d, 생산자(Producer)=%d, 소비자(Consumer)=%d, "
            "각 Producer 주문 수(Orders per producer)=%d\n",
            BUFFER_SIZE, NUM_PRODUCERS, NUM_CONSUMERS, ORDERS_PER_PRODUCER);
-    printf("※ 이 버전은 세마포어 + 뮤텍스를 이용해 동기화를 적용한 코드입니다.\n");
-    printf("   - 버퍼가 가득 차면 Producer 가 자동으로 대기하고,\n");
-    printf("   - 버퍼가 비면 Consumer 가 자동으로 대기합니다.\n");
-    printf("   - 실행 로그에 WARNING/ERROR 가 없고, count 값이 항상 0~%d 사이에 머무는지 확인하세요.\n\n",
-           BUFFER_SIZE);
 
     for (int i = 0; i < NUM_PRODUCERS; i++) {
         producer_ids[i] = i + 1;

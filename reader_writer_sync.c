@@ -19,7 +19,7 @@
 
 #define NUM_READERS 5
 #define NUM_WRITERS 3
-#define OPERATIONS_PER_WRITER 100000
+#define OPERATIONS_PER_WRITER 10000
 
 int balance_sync = 1000;
 int readCount = 0;
@@ -115,10 +115,6 @@ int main(void) {
     printf("=== [SYNC] Reader/Writer - Bank Account Balance ===\n");
     printf("초기 잔액(Initial balance)=%d, Reader 수=%d, Writer 수=%d\n",
            balance_sync, NUM_READERS, NUM_WRITERS);
-    printf("※ 이 버전은 Readers-Writers 알고리즘(Reader 우선)을 이용해 동기화를 적용한 코드입니다.\n");
-    printf("   - 여러 Reader 가 동시에 balance 를 읽을 수 있지만,\n");
-    printf("   - Writer 가 잔액을 수정하는 동안에는 어떤 Reader 도 접근할 수 없습니다.\n");
-    printf("   - 실행 결과에서 Expected 와 Actual 잔액이 항상 같아지는지 확인하세요.\n\n");
 
     for (int i = 0; i < NUM_WRITERS; i++) {
         writer_ids[i] = i + 1;
@@ -148,10 +144,6 @@ int main(void) {
     printf("\n=== Program finished (SYNC) ===\n");
     printf("Expected balance=%d, Actual balance=%d\n",
            expected_balance, balance_sync);
-    printf("설명: Reader/Writer 모두 mutex 로 적절히 동기화되었기 때문에, "
-           "이론적인 기대 잔액과 실제 잔액이 항상 일치합니다.\n");
-    printf("      이는 동기화가 올바르게 적용되어 race condition 및 lost update 가 제거되었음을 의미합니다.\n");
-
     return 0;
 }
 

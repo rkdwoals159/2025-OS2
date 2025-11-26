@@ -16,7 +16,7 @@
 
 #define NUM_READERS 5
 #define NUM_WRITERS 3
-#define OPERATIONS_PER_WRITER 100000
+#define OPERATIONS_PER_WRITER 10000
 
 int balance = 1000;  // 공유 은행 계좌 잔액 (보호 안 함)
 
@@ -83,10 +83,6 @@ int main(void) {
     printf("=== [NO SYNC] Reader/Writer - Bank Account Balance ===\n");
     printf("초기 잔액(Initial balance)=%d, Reader 수=%d, Writer 수=%d\n",
            balance, NUM_READERS, NUM_WRITERS);
-    printf("※ 이 버전은 동기화를 전혀 사용하지 않으며, race condition 을 관찰하기 위한 코드입니다.\n");
-    printf("   - 이론적으로는 모든 Writer 연산의 합이 0 이므로 최종 잔액은 항상 1000 이 되어야 합니다.\n");
-    printf("   - 실제 실행 결과에서 Expected 와 Actual 잔액이 다르면 race condition 으로 인한 데이터 손실입니다.\n\n");
-
     // writer 스레드 생성
     for (int i = 0; i < NUM_WRITERS; i++) {
         writer_ids[i] = i + 1;
@@ -120,11 +116,6 @@ int main(void) {
     printf("\n=== Program finished (NO SYNC) ===\n");
     printf("Expected balance=%d, Actual balance=%d\n",
            expected_balance, balance);
-    printf("설명: 각 Writer 는 +10, -10 을 같은 횟수만큼 수행하므로, "
-           "이론적으로 최종 잔액은 항상 %d 이어야 합니다.\n", expected_balance);
-    printf("      실제 Actual 이 Expected 와 다르면, 여러 Writer 가 동시에 balance 를 갱신하면서\n");
-    printf("      일부 업데이트가 덮어써지는 'lost update' 가 발생한 것으로, "
-           "이는 전형적인 race condition 의 예시입니다.\n");
 
     return 0;
 }

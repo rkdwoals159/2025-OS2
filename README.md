@@ -64,7 +64,6 @@ gcc -Wall -Wextra -pthread reader_writer_sync.c       -o rw_sync
 ./pc_nosync
 ```
 
-- **관찰 포인트**
   - 출력 중 다음과 같은 메시지가 나타날 수 있다.
     - `WARNING: buffer empty but still consuming! count=0`
     - `WARNING: buffer full but still inserting! count=5`
@@ -78,7 +77,6 @@ gcc -Wall -Wextra -pthread reader_writer_sync.c       -o rw_sync
 ./pc_sync
 ```
 
-- **관찰 포인트**
   - `WARNING` 나 `*** ERROR` 메시지가 나타나지 않는다.
   - `count` 값이 항상 `0 ~ BUFFER_SIZE` 범위 안에 머문다.
   - 프로그램 종료 시 출력:
@@ -96,7 +94,6 @@ gcc -Wall -Wextra -pthread reader_writer_sync.c       -o rw_sync
 ./rw_nosync
 ```
 
-- **관찰 포인트**
   - 프로그램 종료 시:
     - `Expected balance=1000, Actual balance=xxx` 출력
   - 이론적으로는 각 writer 가 `+10`, `-10` 을 같은 횟수 수행하므로  
@@ -111,7 +108,6 @@ gcc -Wall -Wextra -pthread reader_writer_sync.c       -o rw_sync
 ./rw_sync
 ```
 
-- **관찰 포인트**
   - 프로그램 종료 시:
     - `Expected balance=1000, Actual balance=1000`
   - `readCount` 가 0에서 1이 될 때, 마지막 reader 가 나갈 때만  
@@ -122,27 +118,3 @@ gcc -Wall -Wextra -pthread reader_writer_sync.c       -o rw_sync
     동기화를 통해 race condition 이 제거되었음을 확인할 수 있다.
 
 ---
-
-### 5. 보고서(동작시험, 자가진단표, 느낀점) 작성 팁
-
-보고서에는 다음 내용을 포함하는 것을 권장한다.
-
-- **동작시험 결과**
-
-  - 각 프로그램(4개)에 대해
-    - 실행 스크린샷 또는 대표 출력 일부
-    - 어떤 상황에서 어떤 문제가 발생/해결되었는지 서술
-  - 예:
-    - `pc_nosync` 에서 `count` 가 음수가 되는 부분 인용 + 설명
-    - `rw_nosync` 에서 기대 잔액과 실제 잔액이 다른 실행 예 인용 + 설명
-    - 동기화 버전에서 위 문제가 사라진 스크린샷 첨부
-
-- **자가진단표**
-
-  - 과제에서 제시한 단계(모델, Producer/Consumer, Reader/Writer)를 기준으로  
-    본인이 구현한 수준(예: 10점/9점/8점…)에 체크하고 근거를 간단히 적는다.
-
-- **토의 및 느낀점**
-  - 동기화 없이 실행했을 때 예상과 달랐던 부분
-  - 세마포/뮤텍스, Readers-Writers 알고리즘을 직접 구현하면서 이해하게 된 점
-  - 실제 서비스(배달 앱, 모바일 뱅킹)에서 동기화가 왜 중요한지에 대한 생각
