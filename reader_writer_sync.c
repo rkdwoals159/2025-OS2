@@ -43,16 +43,17 @@ void *writer_thread(void *arg) {
         random_sleep_short();
 
         if (i % 2 == 0) {
-            local += 10;
+            local += 10;   // 입금
         } else {
-            local -= 10;
+            local -= 10;   // 출금
         }
 
         random_sleep_short();
         balance_sync = local;
 
         if (i % 20000 == 0) {
-            printf("[W%d] operation %d, intermediate balance=%d\n",
+            printf("[W%d][동기화] %d번째 입출금 후 잔액=%d "
+                   "(resource_mutex 로 보호되어 다른 Writer 와의 race condition 이 없음)\n",
                    writer_id, i, balance_sync);
         }
 
@@ -83,8 +84,8 @@ void *reader_thread(void *arg) {
         random_sleep_short();
 
         if (i % 200 == 0) {
-            printf("[R%d] read balance=%d (sample %d, readCount=%d)\n",
-                   reader_id, snapshot, i, readCount);
+            printf("[R%d][동기화] 샘플 %d: 잔액 읽기 balance=%d (현재 동시에 읽는 reader 수 readCount=%d)\n",
+                   reader_id, i, snapshot, readCount);
         }
 
         // 3. readCount 감소 및 마지막 reader 처리
@@ -111,9 +112,13 @@ int main(void) {
     int reader_ids[NUM_READERS];
     int writer_ids[NUM_WRITERS];
 
-    printf("=== Reader/Writer (SYNC) - Bank Account Balance ===\n");
-    printf("Initial balance=%d, Readers=%d, Writers=%d\n\n",
+    printf("=== [SYNC] Reader/Writer - Bank Account Balance ===\n");
+    printf("초기 잔액(Initial balance)=%d, Reader 수=%d, Writer 수=%d\n",
            balance_sync, NUM_READERS, NUM_WRITERS);
+    printf("※ 이 버전은 Readers-Writers 알고리즘(Reader 우선)을 이용해 동기화를 적용한 코드입니다.\n");
+    printf("   - 여러 Reader 가 동시에 balance 를 읽을 수 있지만,\n");
+    printf("   - Writer 가 잔액을 수정하는 동안에는 어떤 Reader 도 접근할 수 없습니다.\n");
+    printf("   - 실행 결과에서 Expected 와 Actual 잔액이 항상 같아지는지 확인하세요.\n\n");
 
     for (int i = 0; i < NUM_WRITERS; i++) {
         writer_ids[i] = i + 1;
@@ -143,7 +148,9 @@ int main(void) {
     printf("\n=== Program finished (SYNC) ===\n");
     printf("Expected balance=%d, Actual balance=%d\n",
            expected_balance, balance_sync);
-    printf("-> 두 값이 항상 같다면 동기화가 race condition 을 성공적으로 제거한 것.\n");
+    printf("설명: Reader/Writer 모두 mutex 로 적절히 동기화되었기 때문에, "
+           "이론적인 기대 잔액과 실제 잔액이 항상 일치합니다.\n");
+    printf("      이는 동기화가 올바르게 적용되어 race condition 및 lost update 가 제거되었음을 의미합니다.\n");
 
     return 0;
 }

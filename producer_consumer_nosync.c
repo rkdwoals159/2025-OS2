@@ -47,7 +47,8 @@ void *producer_thread(void *arg) {
         // 버퍼가 가득 찼는지 확인 (동기화 없음)
         if (count == BUFFER_SIZE) {
             // 사실 여기서 기다리지 않고 그냥 덮어써버림 -> 버퍼 오버라이드
-            printf("[P%d] WARNING: buffer full but still inserting! count=%d\n",
+            printf("[P%d][경고] 버퍼가 가득 찼지만, 동기화가 없어 그대로 덮어쓰기를 시도합니다. "
+                   "(현재 count=%d)\n",
                    producer_id, count);
         }
 
@@ -55,7 +56,8 @@ void *producer_thread(void *arg) {
         buffer[in_index].order_id = my_order_number;
         buffer[in_index].customer_id = producer_id;
 
-        printf("[P%d] Produced order %d at index %d (count before=%d)\n",
+        printf("[P%d] 주문 생성: order_id=%d 를 buffer[%d] 위치에 넣습니다. "
+               "(넣기 전 버퍼 개수 count=%d)\n",
                producer_id, my_order_number, in_index, count);
 
         random_sleep_short();    // 인덱스와 count를 업데이트하기 전 context switch 유도
@@ -81,15 +83,17 @@ void *consumer_thread(void *arg) {
         // 버퍼가 비어 있는지 확인 (동기화 없음)
         if (count == 0) {
             // 실제로는 기다려야 하지만, 여기서는 그냥 "유령 주문" 을 꺼내는 시도를 함
-            printf("[C%d] WARNING: buffer empty but still consuming! count=%d\n",
+            printf("[C%d][경고] 버퍼가 비어 있는데도 소비를 시도합니다. "
+                   "동기화가 없기 때문에 잘못된 데이터를 읽을 수 있습니다. (count=%d)\n",
                    consumer_id, count);
         }
 
         // 버퍼에서 주문 가져오기
         Order o = buffer[out_index];
 
-        printf("[C%d] Consumed order %d (from P%d) at index %d (count before=%d)\n",
-               consumer_id, o.order_id, o.customer_id, out_index, count);
+        printf("[C%d] 주문 소비: buffer[%d] 에서 order_id=%d (생산자 P%d) 를 꺼냅니다. "
+               "(꺼내기 전 버퍼 개수 count=%d)\n",
+               consumer_id, out_index, o.order_id, o.customer_id, count);
 
         random_sleep_short();    // 인덱스와 count를 업데이트하기 전 context switch 유도
 
@@ -98,8 +102,9 @@ void *consumer_thread(void *arg) {
 
         // 비정상적인 상황 감지용 출력
         if (count < 0 || count > BUFFER_SIZE) {
-            printf("[C%d] *** ERROR: invalid count=%d (out of range 0..%d) ***\n",
-                   consumer_id, count, BUFFER_SIZE);
+            printf("[C%d] *** ERROR: count 값이 유효 범위(0~%d)를 벗어났습니다. "
+                   "현재 count=%d → race condition 으로 인한 심각한 불일치입니다. ***\n",
+                   consumer_id, BUFFER_SIZE, count);
         }
 
         random_sleep_short();
@@ -117,9 +122,13 @@ int main(void) {
     int producer_ids[NUM_PRODUCERS];
     int consumer_ids[NUM_CONSUMERS];
 
-    printf("=== Producer/Consumer (NO SYNC) - Food Delivery Order Queue ===\n");
-    printf("Buffer size=%d, Producers=%d, Consumers=%d, Orders per producer=%d\n\n",
+    printf("=== [NO SYNC] Producer/Consumer - Food Delivery Order Queue ===\n");
+    printf("버퍼 크기(Buffer size)=%d, 생산자(Producer)=%d, 소비자(Consumer)=%d, "
+           "각 Producer 주문 수(Orders per producer)=%d\n",
            BUFFER_SIZE, NUM_PRODUCERS, NUM_CONSUMERS, ORDERS_PER_PRODUCER);
+    printf("※ 이 버전은 '동기화 기능이 전혀 없는' 실험용 코드입니다.\n");
+    printf("   - WARNING 메시지: 버퍼 상태를 잘못 판단하는 등 '이상 징후'를 의미\n");
+    printf("   - *** ERROR 메시지: count 값이 음수/버퍼 크기 초과가 된 심각한 race condition 을 의미\n\n");
 
     // 스레드 생성
     for (int i = 0; i < NUM_PRODUCERS; i++) {

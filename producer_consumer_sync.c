@@ -57,7 +57,8 @@ void *producer_thread(void *arg) {
         buffer[in_index].customer_id = producer_id;
 
         count++;
-        printf("[P%d] Produced order %d at index %d (count=%d)\n",
+        printf("[P%d] (동기화) 주문 생성: order_id=%d 를 buffer[%d] 에 안전하게 삽입했습니다. "
+               "(삽입 후 버퍼 개수 count=%d)\n",
                producer_id, my_order_number, in_index, count);
 
         in_index = (in_index + 1) % BUFFER_SIZE;
@@ -90,8 +91,9 @@ void *consumer_thread(void *arg) {
         Order o = buffer[out_index];
         count--;
 
-        printf("[C%d] Consumed order %d (from P%d) at index %d (count=%d)\n",
-               consumer_id, o.order_id, o.customer_id, out_index, count);
+        printf("[C%d] (동기화) 주문 소비: buffer[%d] 에서 order_id=%d (생산자 P%d) 를 안전하게 꺼냈습니다. "
+               "(꺼낸 후 버퍼 개수 count=%d)\n",
+               consumer_id, out_index, o.order_id, o.customer_id, count);
 
         out_index = (out_index + 1) % BUFFER_SIZE;
 
@@ -127,9 +129,15 @@ int main(void) {
     int producer_ids[NUM_PRODUCERS];
     int consumer_ids[NUM_CONSUMERS];
 
-    printf("=== Producer/Consumer (SYNC) - Food Delivery Order Queue ===\n");
-    printf("Buffer size=%d, Producers=%d, Consumers=%d, Orders per producer=%d\n\n",
+    printf("=== [SYNC] Producer/Consumer - Food Delivery Order Queue ===\n");
+    printf("버퍼 크기(Buffer size)=%d, 생산자(Producer)=%d, 소비자(Consumer)=%d, "
+           "각 Producer 주문 수(Orders per producer)=%d\n",
            BUFFER_SIZE, NUM_PRODUCERS, NUM_CONSUMERS, ORDERS_PER_PRODUCER);
+    printf("※ 이 버전은 세마포어 + 뮤텍스를 이용해 동기화를 적용한 코드입니다.\n");
+    printf("   - 버퍼가 가득 차면 Producer 가 자동으로 대기하고,\n");
+    printf("   - 버퍼가 비면 Consumer 가 자동으로 대기합니다.\n");
+    printf("   - 실행 로그에 WARNING/ERROR 가 없고, count 값이 항상 0~%d 사이에 머무는지 확인하세요.\n\n",
+           BUFFER_SIZE);
 
     for (int i = 0; i < NUM_PRODUCERS; i++) {
         producer_ids[i] = i + 1;

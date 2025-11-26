@@ -34,16 +34,17 @@ void *writer_thread(void *arg) {
         random_sleep_short();  // 여기서 다른 쓰기/읽기가 끼어들 수 있음
 
         if (i % 2 == 0) {
-            local += 10;
+            local += 10;   // 입금
         } else {
-            local -= 10;
+            local -= 10;   // 출금
         }
 
         random_sleep_short();  // 쓰기 직전 context switch 유도
         balance = local;       // 쓰기 (보호되지 않은 공유 변수)
 
         if (i % 20000 == 0) {
-            printf("[W%d] operation %d, intermediate balance=%d\n",
+            printf("[W%d][동기화 없음] %d번째 입출금 후 관찰된 중간 잔액=%d "
+                   "(이 값은 다른 Writer 와의 race condition 때문에 실제 의도와 다를 수 있음)\n",
                    writer_id, i, balance);
         }
     }
@@ -57,12 +58,13 @@ void *reader_thread(void *arg) {
 
     // reader는 비교적 적은 횟수만 샘플링
     for (int i = 0; i < 1000; i++) {
-        int snapshot = balance;  // 보호되지 않은 읽기
+        int snapshot = balance;  // 보호되지 않은 읽기 (Reader 가 동시에 읽을 수 있음)
         random_sleep_short();
 
         if (i % 200 == 0) {
-            printf("[R%d] read balance=%d (sample %d)\n",
-                   reader_id, snapshot, i);
+            printf("[R%d][동기화 없음] 샘플 %d: 잔액을 읽어온 결과 balance=%d "
+                   "(Reader 가 읽는 동안 Writer 가 값을 바꾸고 있을 수 있음)\n",
+                   reader_id, i, snapshot);
         }
     }
 
@@ -78,9 +80,12 @@ int main(void) {
     int reader_ids[NUM_READERS];
     int writer_ids[NUM_WRITERS];
 
-    printf("=== Reader/Writer (NO SYNC) - Bank Account Balance ===\n");
-    printf("Initial balance=%d, Readers=%d, Writers=%d\n\n",
+    printf("=== [NO SYNC] Reader/Writer - Bank Account Balance ===\n");
+    printf("초기 잔액(Initial balance)=%d, Reader 수=%d, Writer 수=%d\n",
            balance, NUM_READERS, NUM_WRITERS);
+    printf("※ 이 버전은 동기화를 전혀 사용하지 않으며, race condition 을 관찰하기 위한 코드입니다.\n");
+    printf("   - 이론적으로는 모든 Writer 연산의 합이 0 이므로 최종 잔액은 항상 1000 이 되어야 합니다.\n");
+    printf("   - 실제 실행 결과에서 Expected 와 Actual 잔액이 다르면 race condition 으로 인한 데이터 손실입니다.\n\n");
 
     // writer 스레드 생성
     for (int i = 0; i < NUM_WRITERS; i++) {
@@ -115,7 +120,11 @@ int main(void) {
     printf("\n=== Program finished (NO SYNC) ===\n");
     printf("Expected balance=%d, Actual balance=%d\n",
            expected_balance, balance);
-    printf("-> 두 값이 다르면 race condition 으로 인한 데이터 손실/중복 발생을 의미.\n");
+    printf("설명: 각 Writer 는 +10, -10 을 같은 횟수만큼 수행하므로, "
+           "이론적으로 최종 잔액은 항상 %d 이어야 합니다.\n", expected_balance);
+    printf("      실제 Actual 이 Expected 와 다르면, 여러 Writer 가 동시에 balance 를 갱신하면서\n");
+    printf("      일부 업데이트가 덮어써지는 'lost update' 가 발생한 것으로, "
+           "이는 전형적인 race condition 의 예시입니다.\n");
 
     return 0;
 }
